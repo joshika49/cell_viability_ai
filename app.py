@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
-import streamlit as st
-from weasyprint import HTML
 import io
+import streamlit as st
+from fpdf import FPDF
 
 # 1. Page Configuration (Luxury Theme Setup)
 st.set_page_config(page_title="ViabilityAI Engine", page_icon="🔬", layout="wide")
@@ -51,11 +51,11 @@ with col2:
             
             for c in contours:
                 area = cv2.contourArea(c)
-                if area > 15:  # Filter out minor pixel noise
-                    if area > 55:  # Larger areas classified as Live
+                if area > 15:
+                    if area > 55:
                         cv2.drawContours(output, [c], -1, (0, 255, 0), 2)
                         live_count += 1
-                    else:          # Smaller areas classified as Dead/Debris
+                    else:
                         cv2.drawContours(output, [c], -1, (0, 0, 255), 2)
                         dead_count += 1
             
@@ -80,81 +80,122 @@ with col2:
             # 3. Export PDF Report Section
             st.markdown("---")
             st.markdown("#### 3. Export Analytics")
-            
-            # Clean Premium HTML template to convert directly to PDF
-            html_template = f"""
-            <html>
-            <head>
-            <style>
-                @page {{ size: A4; margin: 20mm 18mm; }}
-                body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #1c1c1c; margin: 0; padding: 0; line-height: 1.5; font-size: 10pt; }}
-                .header {{ text-align: center; border-bottom: 2px solid #cca43b; padding-bottom: 12px; margin-bottom: 25px; }}
-                .brand-title {{ font-size: 24pt; letter-spacing: 4px; color: #1c1c1c; margin: 0 0 4px 0; font-weight: 300; }}
-                .subtitle {{ font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; color: #707070; margin: 0; }}
-                .meta-grid {{ display: table; width: 100%; margin-bottom: 30px; font-size: 9pt; color: #555555; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }}
-                .meta-col {{ display: table-cell; width: 50%; }}
-                .meta-col.right {{ text-align: right; }}
-                .section-title {{ font-size: 13pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cca43b; margin: 25px 0 15px 0; }}
-                .metrics-container {{ display: table; width: 100%; margin-bottom: 30px; border-collapse: separate; border-spacing: 10px 0; margin-left: -10px; }}
-                .metric-card {{ display: table-cell; width: 25%; background-color: #fdfbf7; border: 1px solid #f1ece1; padding: 15px 10px; text-align: center; }}
-                .metric-label {{ font-size: 8pt; text-transform: uppercase; letter-spacing: 1px; color: #707070; margin-bottom: 6px; }}
-                .metric-value {{ font-size: 18pt; font-weight: bold; color: #1c1c1c; }}
-                .details-table {{ width: 100%; border-collapse: collapse; margin-bottom: 35px; }}
-                .details-table th {{ background-color: #121212; color: #ffffff; font-size: 8pt; text-transform: uppercase; letter-spacing: 1px; padding: 10px; }}
-                .details-table td {{ padding: 12px 10px; border-bottom: 1px solid #f0f0f0; font-size: 9.5pt; }}
-                .info-block {{ background-color: #f9f9f9; border-left: 3px solid #1c1c1c; padding: 15px; font-size: 9.5pt; color: #444444; }}
-                .footer-disclaimer {{ position: absolute; bottom: 0; left:0; right:0; text-align: center; font-size: 8pt; color: #a0a0a0; font-style: italic; border-top: 1px solid #e0e0e0; padding-top: 12px; }}
-            </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1 class="brand-title">VIABILITY·AI</h1>
-                    <p class="subtitle">Automated Micrograph Ingestion System Analytics</p>
-                </div>
-                <div class="meta-grid">
-                    <div class="meta-col"><strong>Sample ID:</strong> APP-2026-0608<br><strong>Analysis Type:</strong> High-Density Cell Segmentation</div>
-                    <div class="meta-col right"><strong>Date:</strong> June 8, 2026<br><strong>System Version:</strong> Core Engine v2.4 (Optimized)</div>
-                </div>
-                <div class="section-title">Quantitative Summary Metrics</div>
-                <div class="metrics-container">
-                    <div class="metric-card"><div class="metric-label">Total Counted</div><div class="metric-value">{total_cells}</div></div>
-                    <div class="metric-card"><div class="metric-label">Viable (Live)</div><div class="metric-value" style="color: #2e7d32;">{live_count}</div></div>
-                    <div class="metric-card"><div class="metric-label">Non-Viable (Dead)</div><div class="metric-value" style="color: #c62828;">{dead_count}</div></div>
-                    <div class="metric-card"><div class="metric-label">Viability Rate</div><div class="metric-value" style="color: #cca43b;">{viability_rate:.1f}%</div></div>
-                </div>
-                <div class="section-title">Detailed Diagnostic Breakdown</div>
-                <table class="details-table">
-                    <thead><tr><th style="text-align: left;">Parameter Evaluated</th><th style="text-align: center;">Observed Metric</th><th style="text-align: left;">Clinical Interpretation</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>Total Estimated Cells Counted</strong></td><td style="text-align: center;"><strong>{total_cells}</strong></td><td>High-density population profile detected.</td></tr>
-                        <tr><td><strong>Viable Cells (Live)</strong></td><td style="text-align: center; color: #2e7d32;"><strong>{live_count}</strong></td><td>Active morphology with regular boundary profiles.</td></tr>
-                        <tr><td><strong>Non-Viable Cells (Dead/Debris)</strong></td><td style="text-align: center; color: #c62828;"><strong>{dead_count}</strong></td><td>Fragmented structures and degraded sizing thresholds.</td></tr>
-                        <tr><td><strong>Calculated Viability Rate</strong></td><td style="text-align: center; color: #cca43b;"><strong>{viability_rate:.1f}%</strong></td><td>Suppressed viability profile observed.</td></tr>
-                    </tbody>
-                </table>
-                <div class="section-title">Clinical Ingestion Insights</div>
-                <div class="info-block">
-                    <p><strong>Morphology Assessment:</strong> The AI model evaluated the submitted image cluster running deep adaptive thresholding algorithms. Viable cells were identified through regular edge segmentation and sizing metrics exceeding a 55px threshold block, signaling intact cell membranes.</p>
-                    <p><strong>Monetary Value Delta:</strong> This evaluation sequence was finalized over decentralized browser infrastructure, bypassing proprietary lab hardware dependencies ($5,000 to $30,000 threshold) confirming a significant resource optimization.</p>
-                </div>
-                <div class="footer-disclaimer">Designed exclusively for accessible global healthcare and democratic biomedical research equity.</div>
-            </body>
-            </html>
-            """
-            
-            # Save temporary html block and compile high-end PDF
-            with open("temp_report.html", "w") as f:
-                f.write(html_template)
-                
-            pdf_output = io.BytesIO()
-            HTML("temp_report.html").write_pdf(pdf_output)
-            
+
+            # Generate PDF using fpdf2
+            pdf = FPDF()
+            pdf.add_page()
+
+            # Header
+            pdf.set_font("Helvetica", "B", 20)
+            pdf.cell(0, 12, "VIABILITY.AI", ln=True, align="C")
+            pdf.set_font("Helvetica", "", 10)
+            pdf.cell(0, 8, "Automated Micrograph Ingestion System Analytics", ln=True, align="C")
+            pdf.ln(5)
+            pdf.set_draw_color(204, 164, 59)
+            pdf.set_line_width(0.8)
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(8)
+
+            # Meta info
+            pdf.set_font("Helvetica", "", 9)
+            pdf.cell(0, 6, "Sample ID: APP-2026-0608        Analysis Type: High-Density Cell Segmentation", ln=True)
+            pdf.cell(0, 6, "Date: June 9, 2026              System Version: Core Engine v2.4 (Optimized)", ln=True)
+            pdf.ln(8)
+
+            # Section title
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(204, 164, 59)
+            pdf.cell(0, 8, "QUANTITATIVE SUMMARY METRICS", ln=True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.ln(3)
+
+            # Metrics table
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.set_fill_color(28, 28, 28)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(47, 10, "Total Counted", border=1, fill=True, align="C")
+            pdf.cell(47, 10, "Viable (Live)", border=1, fill=True, align="C")
+            pdf.cell(47, 10, "Non-Viable (Dead)", border=1, fill=True, align="C")
+            pdf.cell(47, 10, "Viability Rate", border=1, fill=True, align="C")
+            pdf.ln()
+
+            pdf.set_font("Helvetica", "B", 14)
+            pdf.set_fill_color(253, 251, 247)
+            pdf.set_text_color(28, 28, 28)
+            pdf.cell(47, 14, str(total_cells), border=1, fill=True, align="C")
+            pdf.set_text_color(46, 125, 50)
+            pdf.cell(47, 14, str(live_count), border=1, fill=True, align="C")
+            pdf.set_text_color(198, 40, 40)
+            pdf.cell(47, 14, str(dead_count), border=1, fill=True, align="C")
+            pdf.set_text_color(204, 164, 59)
+            pdf.cell(47, 14, f"{viability_rate:.1f}%", border=1, fill=True, align="C")
+            pdf.ln(12)
+
+            # Detailed breakdown
+            pdf.set_text_color(204, 164, 59)
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "DETAILED DIAGNOSTIC BREAKDOWN", ln=True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.ln(3)
+
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_fill_color(28, 28, 28)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(70, 8, "Parameter Evaluated", border=1, fill=True)
+            pdf.cell(40, 8, "Observed Metric", border=1, fill=True, align="C")
+            pdf.cell(78, 8, "Clinical Interpretation", border=1, fill=True)
+            pdf.ln()
+
+            rows = [
+                ("Total Estimated Cells Counted", str(total_cells), "High-density population profile detected."),
+                ("Viable Cells (Live)", str(live_count), "Active morphology, regular boundary profiles."),
+                ("Non-Viable Cells (Dead/Debris)", str(dead_count), "Fragmented structures, degraded sizing."),
+                (f"Calculated Viability Rate", f"{viability_rate:.1f}%", "Suppressed viability profile observed."),
+            ]
+
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(28, 28, 28)
+            pdf.set_fill_color(255, 255, 255)
+            for row in rows:
+                pdf.cell(70, 8, row[0], border=1)
+                pdf.cell(40, 8, row[1], border=1, align="C")
+                pdf.cell(78, 8, row[2], border=1)
+                pdf.ln()
+
+            pdf.ln(10)
+
+            # Insights block
+            pdf.set_text_color(204, 164, 59)
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "CLINICAL INGESTION INSIGHTS", ln=True)
+            pdf.set_text_color(28, 28, 28)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_fill_color(249, 249, 249)
+            pdf.multi_cell(0, 6,
+                "Morphology Assessment: The AI model evaluated the submitted image cluster running deep adaptive "
+                "thresholding algorithms. Viable cells were identified through regular edge segmentation and sizing "
+                "metrics exceeding a 55px threshold block, signaling intact cell membranes.\n\n"
+                "Monetary Value Delta: This evaluation sequence was finalized over decentralized browser infrastructure, "
+                "bypassing proprietary lab hardware dependencies ($5,000 to $30,000 threshold) confirming a significant "
+                "resource optimization.",
+                fill=True
+            )
+
+            # Footer
+            pdf.ln(5)
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.set_text_color(160, 160, 160)
+            pdf.cell(0, 6, "Designed exclusively for accessible global healthcare and democratic biomedical research equity.", align="C")
+
+            # Output
+            pdf_output = bytes(pdf.output())
+
             st.download_button(
                 label="Download PDF Diagnostic Report",
-                data=pdf_output.getvalue(),
+                data=pdf_output,
                 file_name="ViabilityAI_Diagnostic_Report.pdf",
                 mime="application/pdf"
             )
-            
+
     else:
         st.info("System idle. Awaiting microscopic visual upload from the active diagnostic panel.")
