@@ -7,17 +7,64 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;500&family=Montserrat:wght@200;300;400;500&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background-color: #0a0a0a; color: #ffffff; overflow-x: hidden; }
-        .luxury-title { font-family: 'Cinzel', serif; letter-spacing: 6px; }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: #0a0a0a; 
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .luxury-title { 
+            font-family: 'Cinzel', serif; 
+            letter-spacing: 6px; 
+        }
         .gold-accent { color: #cca43b; }
         .border-gold { border-color: #cca43b; }
         .bg-gold { background-color: #cca43b; }
-        .page-section { position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; opacity: 0; pointer-events: none; transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); transform: translateY(15px); padding-top: 100px; display: flex; align-items: center; }
-        .page-section.active { position: relative; opacity: 1; pointer-events: auto; transform: translateY(0); }
-        .nav-link { position: relative; transition: color 0.3s ease; }
-        .nav-link::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background-color: #cca43b; transition: width 0.3s ease; }
-        .nav-link:hover::after, .nav-link.active-link::after { width: 100%; }
-        .nav-link:hover, .nav-link.active-link { color: #ffffff; }
+        
+        /* Smooth Custom Page Transitions */
+        .page-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            transform: translateY(15px);
+            padding-top: 100px;
+            display: flex;
+            align-items: center;
+        }
+        .page-section.active {
+            position: relative;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        
+        /* Navigation Highlight Link */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: #cca43b;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active-link::after {
+            width: 100%;
+        }
+        .nav-link:hover, .nav-link.active-link {
+            color: #ffffff;
+        }
     </style>
 </head>
 <body class="flex flex-col justify-between min-h-screen">
@@ -32,14 +79,13 @@
             <button id="link-vision" onclick="showPage('vision')" class="nav-link focus:outline-none">Our Architecture</button>
             <button id="link-pricing" onclick="showPage('pricing')" class="nav-link focus:outline-none">Market Disruption</button>
         </div>
-        <button onclick="triggerUpload()" class="border border-gold text-white text-[10px] uppercase tracking-[0.25em] px-6 py-3 hover:bg-gold hover:text-black transition duration-500 font-medium">
+        <a href="/api/analyze" class="border border-gold text-white text-[10px] uppercase tracking-[0.25em] px-6 py-3 hover:bg-gold hover:text-black transition duration-500 font-medium">
             Launch Engine
-        </button>
+        </a>
     </nav>
 
-    <input type="file" id="cellImageFile" accept="image/*" class="hidden" onchange="uploadAndProcessImage()">
-
     <main class="flex-grow relative bg-[#0a0a0a]">
+
         <section id="home" class="page-section active">
             <div class="max-w-5xl mx-auto text-center px-6 w-full">
                 <h2 class="text-[10px] uppercase tracking-[0.6em] text-zinc-500 mb-5 font-medium">Biomedical Computer Vision</h2>
@@ -50,25 +96,13 @@
                 <p class="text-zinc-400 max-w-2xl mx-auto text-xs md:text-sm font-light leading-[1.8] mb-12 tracking-wide">
                     Breaking hardware monopolies via localized web systems. Instantly upload high-density cell micrographs to process computer vision edge detection thresholds natively inside your browser.
                 </p>
-                
-                <div id="resultsPanel" class="hidden max-w-md mx-auto mb-10 border border-zinc-800 bg-zinc-950/50 p-6 text-left">
-                    <h4 class="text-xs uppercase tracking-widest text-gold mb-4 font-semibold">Diagnostic Calculations:</h4>
-                    <div class="flex justify-between text-xs py-2 border-b border-zinc-900"><span class="text-zinc-500">Total Cells:</span><span id="resTotal" class="text-white font-bold">-</span></div>
-                    <div class="flex justify-between text-xs py-2 border-b border-zinc-900"><span class="text-zinc-500">Live Population:</span><span id="resLive" class="text-emerald-400 font-bold">-</span></div>
-                    <div class="flex justify-between text-xs py-2 border-b border-zinc-900"><span class="text-zinc-500">Dead Population:</span><span id="resDead" class="text-red-400 font-bold">-</span></div>
-                    <div class="flex justify-between text-sm py-3 border-b border-zinc-900"><span class="text-gold font-medium">Overall Viability:</span><span id="resViability" class="text-white font-bold">-</span></div>
-                    <a href="/api/download-report" class="block w-full text-center mt-4 bg-zinc-900 border border-zinc-800 text-gold hover:bg-gold hover:text-black font-semibold text-[10px] uppercase tracking-wider py-3 transition duration-300">
-                        Download Clinical PDF Report
-                    </a>
-                </div>
-
                 <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
                     <button onclick="showPage('crisis')" class="w-full sm:w-auto bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] uppercase tracking-[0.25em] px-10 py-5 hover:bg-white hover:text-black hover:border-white transition duration-500">
                         Expose The Industry
                     </button>
-                    <button onclick="triggerUpload()" id="actionBtnText" class="w-full sm:w-auto bg-gold text-black text-[10px] uppercase tracking-[0.25em] px-10 py-5 hover:bg-white transition duration-500 font-semibold text-center">
+                    <a href="/api/analyze" class="w-full sm:w-auto bg-gold text-black text-[10px] uppercase tracking-[0.25em] px-10 py-5 hover:bg-white transition duration-500 font-semibold text-center">
                         Execute Live Ingestion
-                    </button>
+                    </a>
                 </div>
             </div>
         </section>
@@ -168,6 +202,7 @@
                 </div>
             </div>
         </section>
+
     </main>
 
     <footer class="bg-[#0a0a0a] text-center py-8 border-t border-zinc-900 text-[9px] tracking-[0.3em] text-zinc-600 uppercase font-medium">
@@ -177,57 +212,28 @@
     <script>
         function showPage(pageId) {
             const sections = document.querySelectorAll('.page-section');
-            sections.forEach(section => section.classList.remove('active'));
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
             const links = document.querySelectorAll('.nav-link');
-            links.forEach(link => link.classList.remove('active-link'));
+            links.forEach(link => {
+                link.classList.remove('active-link');
+            });
+            
             const targetSection = document.getElementById(pageId);
             const targetLink = document.getElementById('link-' + pageId);
-            if (targetSection) targetSection.classList.add('active');
-            if (targetLink) targetLink.classList.add('active-link');
+            
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            if (targetLink) {
+                targetLink.classList.add('active-link');
+            }
+            
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
-
-        function triggerUpload() {
-            document.getElementById('cellImageFile').click();
-        }
-
-        async function uploadAndProcessImage() {
-            const fileInput = document.getElementById('cellImageFile');
-            const actionBtn = document.getElementById('actionBtnText');
-            const resultsPanel = document.getElementById('resultsPanel');
-            
-            if (!fileInput.files || fileInput.files.length === 0) return;
-            
-            const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            actionBtn.innerText = "PROCESSING ASSAY...";
-            actionBtn.disabled = true;
-
-            try {
-                const response = await fetch('/api/analyze', { method: 'POST', body: formData });
-                const data = await response.json();
-                
-                if (response.ok && data.status === "success") {
-                    document.getElementById('resTotal').innerText = data.total_count;
-                    document.getElementById('resLive').innerText = data.live_count;
-                    document.getElementById('resDead').innerText = data.dead_count;
-                    document.getElementById('resViability').innerText = data.viability + "%";
-                    resultsPanel.classList.remove('hidden');
-                    actionBtn.innerText = "ANALYSIS COMPLETE";
-                } else {
-                    alert("Analysis processing error: " + (data.error || "Unknown error"));
-                    actionBtn.innerText = "EXECUTE LIVE INGESTION";
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Could not connect to back-end computing functions.");
-                actionBtn.innerText = "EXECUTE LIVE INGESTION";
-            } finally {
-                actionBtn.disabled = false;
-            }
-        }
     </script>
+
 </body>
 </html>
